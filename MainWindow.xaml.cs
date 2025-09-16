@@ -1,4 +1,6 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -8,24 +10,39 @@ namespace TodoAppWpf
     public partial class MainWindow : Window
     {
         public ObservableCollection<TodoItem> TodoItems { get; set; }
+        public ObservableCollection<TodoItem> FilteredTodoItems { get; set; }
         private int editId = -1;
         private readonly JsonDataService _dataService;
+        private string currentFilter = "All";
+        private string currentSort = "Creation Date (Newest)";
 
         public MainWindow()
         {
             InitializeComponent();
 
             _dataService = new JsonDataService();
-            TodoItems = new ObservableCollection<TodoItem>(_dataService.LoadTodos());
+
+            var loadedTodos = _dataService.LoadTodos();
+            TodoItems = loadedTodos != null
+                ? new ObservableCollection<TodoItem>(loadedTodos)
+                : new ObservableCollection<TodoItem>();
+
+            FilteredTodoItems = new ObservableCollection<TodoItem>();
 
             // Make sure all items have updated their status color
             foreach (var item in TodoItems)
             {
                 item.UpdateStatusColor();
             }
-            lstTasks.ItemsSource = TodoItems;
 
-            TodoItems.CollectionChanged += (s, e) => SaveTodos();
+            ApplyFilterAndSort();
+            lstTasks.ItemsSource = FilteredTodoItems;
+
+            TodoItems.CollectionChanged += (s, e) =>
+            {
+                ApplyFilterAndSort();
+                SaveTodos();
+            };
         }
 
         private void btnAdd_Click(object sender, RoutedEventArgs e)
@@ -142,6 +159,77 @@ namespace TodoAppWpf
             bool isItemSelected = lstTasks.SelectedItem != null;
             btnUpdate.IsEnabled = isItemSelected;
             btnMarkComplete.IsEnabled = isItemSelected;
+        }
+
+        private void cmbFilterStatus_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (cmbFilterStatus.SelectedItem is ComboBoxItem selectedItem)
+            {
+                currentFilter = selectedItem.Content.ToString()!;
+                ApplyFilterAndSort();
+            }
+        }
+
+        private void cmbSortBy_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (cmbSortBy.SelectedItem is ComboBoxItem selectedItem)
+            {
+                currentSort = selectedItem.Content.ToString()!;
+                ApplyFilterAndSort();
+            }
+        }
+
+        private void btnClearFilters_Click(object sender, RoutedEventArgs e)
+        {
+            cmbFilterStatus.SelectedIndex = 0;
+            cmbSortBy.SelectedIndex = 0;
+            ApplyFilterAndSort();
+        }
+
+        private void ApplyFilterAndSort()
+        {
+            if (TodoItems == null) return;
+
+            // Apply filter
+            IEnumerable<TodoItem> filtered = currentFilter == "All"
+                ? TodoItems
+                : TodoItems.Where(item => item.Status == currentFilter);
+
+            if (filtered == null)
+                filtered = Enumerable.Empty<TodoItem>();
+
+            // Apply sorting
+            switch (currentSort)
+            {
+                case "Creation Date (Newest)":
+                    filtered = filtered.OrderByDescending(item => item.CreatedDate);
+                    break;
+                case "Creation Date (Oldest)":
+                    filtered = filtered.OrderBy(item => item.CreatedDate);
+                    break;
+                case "Modification Date (Newest)":
+                    filtered = filtered.OrderByDescending(item => item.ModifiedDate);
+                    break;
+                case "Modification Date (Oldest)":
+                    filtered = filtered.OrderBy(item => item.ModifiedDate);
+                    break;
+                case "Title (A-Z)":
+                    filtered = filtered.OrderBy(item => item.Title);
+                    break;
+                case "Title (Z-A)":
+                    filtered = filtered.OrderByDescending(item => item.Title);
+                    break;
+                case "Status":
+                    filtered = filtered.OrderBy(item => item.Status);
+                    break;
+            }
+
+            // Update the filtered collection
+            FilteredTodoItems.Clear();
+            foreach (var item in filtered)
+            {
+                FilteredTodoItems.Add(item);
+            }
         }
 
         private void ClearForm()

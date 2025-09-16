@@ -8,11 +8,12 @@
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Input Section -->
+        <!-- Input section -->
         <GroupBox Grid.Row="0" Header="New Task" Margin="0,0,0,10">
             <Grid Margin="5">
                 <Grid.ColumnDefinitions>
@@ -57,8 +58,50 @@
             </Grid>
         </GroupBox>
 
-        <!-- Tasks List -->
-        <ListBox x:Name="lstTasks" Grid.Row="1" Margin="0,0,0,10" 
+        <!-- Filter and sort section -->
+        <GroupBox Grid.Row="1" Header="Filter and sort" Margin="0,0,0,10">
+            <Grid Margin="5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Label Grid.Column="0" Content="Filter by status:" 
+                       Margin="0,0,5,0" VerticalAlignment="Center"/>
+                <ComboBox x:Name="cmbFilterStatus" Grid.Column="1" 
+                          SelectedIndex="0" Margin="0,0,10,0" SelectionChanged="cmbFilterStatus_SelectionChanged">
+                    <ComboBoxItem Content="All"/>
+                    <ComboBoxItem Content="Pending"/>
+                    <ComboBoxItem Content="Under review"/>
+                    <ComboBoxItem Content="Done"/>
+                </ComboBox>
+
+                <Label Grid.Column="2" Content="Sort by:" 
+                       Margin="0,0,5,0" VerticalAlignment="Center"/>
+                <ComboBox x:Name="cmbSortBy" Grid.Column="3" 
+                          SelectedIndex="0" Margin="0,0,10,0" SelectionChanged="cmbSortBy_SelectionChanged">
+                    <ComboBoxItem Content="Creation Date (Newest)"/>
+                    <ComboBoxItem Content="Creation Date (Oldest)"/>
+                    <ComboBoxItem Content="Modification Date (Newest)"/>
+                    <ComboBoxItem Content="Modification Date (Oldest)"/>
+                    <ComboBoxItem Content="Title (A-Z)"/>
+                    <ComboBoxItem Content="Title (Z-A)"/>
+                    <ComboBoxItem Content="Status"/>
+                </ComboBox>
+
+                <Button x:Name="btnClearFilters" Grid.Column="4" 
+                        Content="Clear filters" Padding="10,5" Click="btnClearFilters_Click"/>
+            </Grid>
+        </GroupBox>
+
+        <!-- Tasks list -->
+        <ListBox x:Name="lstTasks" Grid.Row="2" Margin="0,0,0,10" 
                  SelectionChanged="lstTasks_SelectionChanged">
             <ListBox.ItemTemplate>
                 <DataTemplate>
@@ -91,10 +134,10 @@
 
                             <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,5,0,0">
                                 <TextBlock Text="Created: " FontSize="10" Foreground="Gray"/>
-                                <TextBlock Text="{Binding CreatedDate, StringFormat=dd/MM/yyyy HH:mm}" 
+                                <TextBlock Text="{Binding CreatedDate, StringFormat=dd/MM/yyyy HH:mm:ss}" 
                                            FontSize="10" Foreground="Gray" Margin="0,0,10,0"/>
                                 <TextBlock Text="Modified: " FontSize="10" Foreground="Gray"/>
-                                <TextBlock Text="{Binding ModifiedDate, StringFormat=dd/MM/yyyy HH:mm}" 
+                                <TextBlock Text="{Binding ModifiedDate, StringFormat=dd/MM/yyyy HH:mm:ss}" 
                                            FontSize="10" Foreground="Gray"/>
                             </StackPanel>
                         </Grid>
@@ -103,8 +146,8 @@
             </ListBox.ItemTemplate>
         </ListBox>
 
-        <!-- Action Buttons -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+        <!-- Action buttons -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button x:Name="btnUpdate" Content="Modify" Padding="20,5" 
                     Margin="0,0,10,0" Click="btnUpdate_Click" IsEnabled="False"/>
             <Button x:Name="btnMarkComplete" Content="Mark as Done" 
