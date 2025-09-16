@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.ObjectModel;
-using System.Linq;
+﻿using System.Collections.ObjectModel;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -15,6 +14,10 @@ namespace TodoAppWpf
         private readonly JsonDataService _dataService;
         private string currentFilter = "All";
         private string currentSort = "Creation Date (Newest)";
+
+        // Validation constants
+        private const int MaxTitleLength = 100;
+        private const int MaxDescriptionLength = 750;
 
         public MainWindow()
         {
@@ -43,13 +46,36 @@ namespace TodoAppWpf
                 ApplyFilterAndSort();
                 SaveTodos();
             };
+
+            // Initial validation check
+            ValidateForm();
         }
 
         private void btnAdd_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(txtTitle.Text))
+            var title = txtTitle.Text.Trim();
+            if (string.IsNullOrWhiteSpace(title))
             {
-                ShowStatusMessage("Title cannot be empty!", Brushes.Red);
+                ShowErrorMessage(txtTitleError, "Title is required.");
+                return;
+            }
+
+            var desc = txtDescription.Text.Trim();
+            if (string.IsNullOrWhiteSpace(desc))
+            {
+                ShowErrorMessage(txtDescriptionError, "Description is required.");
+                return;
+            }
+
+            if (desc.Length < 10)
+            {
+                ShowErrorMessage(txtDescriptionError, "Cannot be less than 10 characters.");
+                return;
+            }
+
+            if (!ValidateForm())
+            {
+                ShowStatusMessage("Please fix validation errors before adding a task.", Brushes.Red);
                 return;
             }
 
@@ -57,12 +83,20 @@ namespace TodoAppWpf
 
             if (editId == -1)
             {
+                // Check for duplicate titles (case-insensitive)
+                if (TodoItems.Any(item =>
+                    item.Title.Equals(txtTitle.Text.Trim(), StringComparison.OrdinalIgnoreCase)))
+                {
+                    ShowStatusMessage("A task with this title already exists!", Brushes.Red);
+                    return;
+                }
+
                 // Add new item
                 var newItem = new TodoItem
                 {
                     Id = GetNextId(),
-                    Title = txtTitle.Text,
-                    Description = txtDescription.Text,
+                    Title = txtTitle.Text.Trim(),
+                    Description = txtDescription.Text.Trim(),
                     Status = status!
                 };
                 newItem.UpdateStatusColor();
@@ -76,8 +110,17 @@ namespace TodoAppWpf
                 var existingItem = TodoItems.FirstOrDefault(item => item.Id == editId);
                 if (existingItem != null)
                 {
-                    existingItem.Title = txtTitle.Text;
-                    existingItem.Description = txtDescription.Text;
+                    // Check for duplicate titles excluding the current item
+                    if (TodoItems.Any(item =>
+                        item.Id != editId &&
+                        item.Title.Equals(txtTitle.Text.Trim(), StringComparison.OrdinalIgnoreCase)))
+                    {
+                        ShowStatusMessage("A task with this title already exists!", Brushes.Red);
+                        return;
+                    }
+
+                    existingItem.Title = txtTitle.Text.Trim();
+                    existingItem.Description = txtDescription.Text.Trim();
                     existingItem.Status = status!;
                     existingItem.UpdateStatusColor();
                     existingItem.UpdateModifiedDate();
@@ -94,7 +137,7 @@ namespace TodoAppWpf
                 ShowStatusMessage("Task updated successfully!", Brushes.Green);
             }
 
-            SaveTodos(); // Save after adding/modifying
+            SaveTodos();
             ClearForm();
         }
 
@@ -119,6 +162,9 @@ namespace TodoAppWpf
                 editId = selectedItem.Id;
                 btnAdd.Content = "Save";
                 txtStatusMessage.Text = $"Editing task: {selectedItem.Title}";
+
+                // Validate the form when editing
+                ValidateForm();
             }
         }
 
@@ -186,6 +232,18 @@ namespace TodoAppWpf
             ApplyFilterAndSort();
         }
 
+        private void txtTitle_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ValidateTitle();
+            ValidateForm();
+        }
+
+        private void txtDescription_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ValidateDescription();
+            ValidateForm();
+        }
+
         private void ApplyFilterAndSort()
         {
             if (TodoItems == null) return;
@@ -232,18 +290,88 @@ namespace TodoAppWpf
             }
         }
 
-        private void ClearForm()
+        private bool ValidateTitle()
         {
-            txtTitle.Clear();
-            txtDescription.Clear();
-            cmbStatus.SelectedIndex = 0;
-            lstTasks.SelectedIndex = -1;
+            var title = txtTitle.Text.Trim();
+
+            if (title.Length > MaxTitleLength)
+            {
+                ShowErrorMessage(txtTitleError, $"Title cannot exceed {MaxTitleLength} characters.");
+                return false;
+            }
+
+            // Check for invalid characters
+            if (Regex.IsMatch(title, @"[<>""&'\\]"))
+            {
+                ShowErrorMessage(txtTitleError, "Title contains invalid characters.");
+                return false;
+            }
+
+            ClearErrorMessage(txtTitleError);
+            return true;
+        }
+
+        private bool ValidateDescription()
+        {
+            var description = txtDescription.Text;
+
+            if (description.Length > MaxDescriptionLength)
+            {
+                ShowErrorMessage(txtDescriptionError, $"Description cannot exceed {MaxDescriptionLength} characters.");
+                return false;
+            }
+
+            // Check for invalid characters
+            if (Regex.IsMatch(description, @"[<>""&'\\]"))
+            {
+                ShowErrorMessage(txtDescriptionError, "Description contains invalid characters.");
+                return false;
+            }
+
+            ClearErrorMessage(txtDescriptionError);
+            return true;
+        }
+
+        private bool ValidateForm()
+        {
+            bool isTitleValid = ValidateTitle();
+            bool isDescriptionValid = ValidateDescription();
+
+            // Enable/disable add button based on validation
+            btnAdd.IsEnabled = isTitleValid && isDescriptionValid;
+
+            return isTitleValid && isDescriptionValid;
+        }
+
+        private void ShowErrorMessage(TextBlock errorControl, string message)
+        {
+            errorControl.Text = message;
+            errorControl.Visibility = Visibility.Visible;
+        }
+
+        private void ClearErrorMessage(TextBlock errorControl)
+        {
+            errorControl.Text = string.Empty;
+            errorControl.Visibility = Visibility.Collapsed;
         }
 
         private void ShowStatusMessage(string message, Brush color)
         {
             txtStatusMessage.Foreground = color;
             txtStatusMessage.Text = message;
+        }
+
+        private void ClearForm()
+        {
+            txtTitle.Clear();
+            txtDescription.Clear();
+            cmbStatus.SelectedIndex = 0;
+            lstTasks.SelectedIndex = -1;
+            ClearErrorMessage(txtTitleError);
+            ClearErrorMessage(txtDescriptionError);
+            btnAdd.Content = "Add";
+            editId = -1;
+            ValidateForm();
         }
 
         private int GetNextId()

@@ -8,6 +8,8 @@ namespace TodoAppWpf
     {
         private string _status = string.Empty;
         private Brush _statusColor = Brushes.Gray;
+        private bool _isDescriptionExpanded = false;
+        private bool _showToggleButton = false;
 
         public TodoItem()
         {
@@ -66,6 +68,32 @@ namespace TodoAppWpf
             }
         }
 
+        [JsonIgnore]
+        public bool IsDescriptionExpanded
+        {
+            get => _isDescriptionExpanded;
+            set
+            {
+                _isDescriptionExpanded = value;
+                OnPropertyChanged(nameof(IsDescriptionExpanded));
+                OnPropertyChanged(nameof(ToggleDescriptionText));
+            }
+        }
+
+        [JsonIgnore]
+        public bool ShowToggleButton
+        {
+            get => _showToggleButton;
+            set
+            {
+                _showToggleButton = value;
+                OnPropertyChanged(nameof(ShowToggleButton));
+            }
+        }
+
+        [JsonIgnore]
+        public string ToggleDescriptionText => IsDescriptionExpanded ? "Show less" : "Show more";
+
         public void UpdateStatusColor()
         {
             StatusColor = Status switch
@@ -81,6 +109,13 @@ namespace TodoAppWpf
         {
             ModifiedDate = DateTime.Now;
             OnPropertyChanged(nameof(ModifiedDate));
+        }
+
+        public void CheckDescriptionLength()
+        {
+            // Show toggle button only if description has more than 3 lines
+            var lineCount = Description.Split('\n').Length;
+            ShowToggleButton = lineCount > 3;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Todo App" Height="600" Width="800" MinWidth="600" MinHeight="400">
+        Title="Todo App" Height="700" Width="900" MinWidth="600" MinHeight="500">
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -26,35 +26,51 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- Inputs -->
-                <Label Grid.Row="0" Grid.Column="0" Content="Title" 
+                <!-- Title Input -->
+                <Label Grid.Row="0" Grid.Column="0" Content="Title*" 
                        Margin="0,0,5,5" VerticalAlignment="Center"/>
                 <TextBox x:Name="txtTitle" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"
-                         Margin="0,0,0,5" Padding="3" Text=""/>
+                         Margin="0,0,0,5" Padding="3" Text=""
+                         TextChanged="txtTitle_TextChanged"/>
+                <TextBlock x:Name="txtTitleError" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
+                           Foreground="Red" FontSize="10" TextWrapping="Wrap" Margin="0,0,0,5"
+                           Visibility="Collapsed"/>
 
-                <Label Grid.Row="1" Grid.Column="0" Content="Description" 
+                <!-- Description Input -->
+                <Label Grid.Row="2" Grid.Column="0" Content="Description*" 
                        Margin="0,0,5,5" VerticalAlignment="Center"/>
-                <TextBox x:Name="txtDescription" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
+                <TextBox x:Name="txtDescription" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2"
                          Margin="0,0,0,5" Padding="3" Text="" 
-                         AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60"/>
+                         AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60"
+                         TextChanged="txtDescription_TextChanged"
+                         VerticalScrollBarVisibility="Auto"/>
+                <TextBlock x:Name="txtDescriptionError" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2"
+                           Foreground="Red" FontSize="10" TextWrapping="Wrap" Margin="0,0,0,5"
+                           Visibility="Collapsed"/>
 
-                <Label Grid.Row="2" Grid.Column="0" Content="Status" 
+                <!-- Status Input -->
+                <Label Grid.Row="4" Grid.Column="0" Content="Status" 
                        Margin="0,0,5,0" VerticalAlignment="Center"/>
-                <ComboBox x:Name="cmbStatus" Grid.Row="2" Grid.Column="1" 
+                <ComboBox x:Name="cmbStatus" Grid.Row="4" Grid.Column="1" 
                           SelectedIndex="0" Margin="0,0,5,0">
                     <ComboBoxItem Content="Pending"/>
                     <ComboBoxItem Content="Under review"/>
                     <ComboBoxItem Content="Done"/>
                 </ComboBox>
 
-                <Button x:Name="btnAdd" Grid.Row="2" Grid.Column="2" 
+                <Button x:Name="btnAdd" Grid.Row="4" Grid.Column="2" 
                         Content="Add" Padding="20,5" Click="btnAdd_Click"/>
 
+                <TextBlock Text="* These fields are mandatory." Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3"
+                           Margin="0,5,0,0" Foreground="DarkSlateGray" TextWrapping="Wrap"/>
+                
                 <!-- Status message -->
-                <TextBlock x:Name="txtStatusMessage" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3"
-                           Margin="0,5,0,0" Foreground="Green" TextWrapping="Wrap"/>
+                <TextBlock x:Name="txtStatusMessage" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3"
+                           Margin="0,30,0,0" Foreground="Green" TextWrapping="Wrap"/>
             </Grid>
         </GroupBox>
 
@@ -100,51 +116,70 @@
             </Grid>
         </GroupBox>
 
-        <!-- Tasks list -->
-        <ListBox x:Name="lstTasks" Grid.Row="2" Margin="0,0,0,10" 
-                 SelectionChanged="lstTasks_SelectionChanged">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <Border Padding="5" Margin="0,2" BorderThickness="1" 
-                            BorderBrush="#FFCCCCCC" CornerRadius="3">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
+        <!-- Tasks list with improved layout -->
+        <GroupBox Grid.Row="2" Header="Tasks" Margin="0,0,0,10">
+            <Grid>
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                    <ListBox x:Name="lstTasks" SelectionChanged="lstTasks_SelectionChanged"
+                             ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Padding="10" Margin="0,5" BorderThickness="1" 
+                                        BorderBrush="#FFCCCCCC" CornerRadius="5">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
 
-                            <TextBlock Grid.Row="0" Text="{Binding Title}" 
-                                       FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
+                                        <!-- Title -->
+                                        <TextBlock Grid.Row="0" Text="{Binding Title}" 
+                                                   FontWeight="Bold" FontSize="14"
+                                                   TextTrimming="CharacterEllipsis"/>
 
-                            <TextBlock Grid.Row="1" Text="{Binding Description}" 
-                                       Margin="0,5,0,0" TextWrapping="Wrap" 
-                                       TextTrimming="CharacterEllipsis" MaxHeight="60"/>
+                                        <!-- Description with scroll -->
+                                        <ScrollViewer Grid.Row="1" MaxHeight="120" 
+                                                      VerticalScrollBarVisibility="Auto"
+                                                      HorizontalScrollBarVisibility="Auto"
+                                                      Margin="0,8,0,8">
+                                            <TextBlock Text="{Binding Description}" 
+                                                       TextWrapping="Wrap" FontSize="12"/>
+                                        </ScrollViewer>
 
-                            <StackPanel Grid.Row="2" Orientation="Horizontal" 
-                                        HorizontalAlignment="Right" Margin="0,5,0,0">
-                                <Border Background="{Binding StatusColor}" CornerRadius="3" Padding="5,2">
-                                    <TextBlock Text="{Binding Status}" Margin="0,0,10,0" 
-                                               Foreground="White" FontWeight="SemiBold"/>
+                                        <!-- Dates -->
+                                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,8">
+                                            <TextBlock Text="Created: " FontSize="10" Foreground="Gray"/>
+                                            <TextBlock Text="{Binding CreatedDate, StringFormat=dd/MM/yyyy HH:mm:ss}" 
+                                                       FontSize="10" Foreground="Gray" Margin="0,0,15,0"/>
+                                            <TextBlock Text="Modified: " FontSize="10" Foreground="Gray"/>
+                                            <TextBlock Text="{Binding ModifiedDate, StringFormat=dd/MM/yyyy HH:mm:ss}" 
+                                                       FontSize="10" Foreground="Gray"/>
+                                        </StackPanel>
+
+                                        <!-- Status and delete button -->
+                                        <StackPanel Grid.Row="3" Orientation="Horizontal" 
+                                                    HorizontalAlignment="Left">
+                                            <Border Background="{Binding StatusColor}" CornerRadius="3" 
+                                                    Padding="8,4" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Status}" Margin="0,0,10,0" 
+                                                           Foreground="White" FontWeight="SemiBold"
+                                                           FontSize="11"/>
+                                            </Border>
+                                            <Button Content="Delete" Padding="12,4" 
+                                                    Click="btnDelete_Click" Tag="{Binding Id}"
+                                                    FontSize="11"/>
+                                        </StackPanel>
+                                    </Grid>
                                 </Border>
-                                <Button Content="Delete" Padding="10,2" 
-                                        Click="btnDelete_Click" Tag="{Binding Id}"/>
-                            </StackPanel>
-
-                            <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,5,0,0">
-                                <TextBlock Text="Created: " FontSize="10" Foreground="Gray"/>
-                                <TextBlock Text="{Binding CreatedDate, StringFormat=dd/MM/yyyy HH:mm:ss}" 
-                                           FontSize="10" Foreground="Gray" Margin="0,0,10,0"/>
-                                <TextBlock Text="Modified: " FontSize="10" Foreground="Gray"/>
-                                <TextBlock Text="{Binding ModifiedDate, StringFormat=dd/MM/yyyy HH:mm:ss}" 
-                                           FontSize="10" Foreground="Gray"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </ScrollViewer>
+            </Grid>
+        </GroupBox>
 
         <!-- Action buttons -->
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
