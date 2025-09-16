@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.ObjectModel;
-using System.Linq;
+﻿using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -11,12 +9,23 @@ namespace TodoAppWpf
     {
         public ObservableCollection<TodoItem> TodoItems { get; set; }
         private int editId = -1;
+        private readonly JsonDataService _dataService;
 
         public MainWindow()
         {
             InitializeComponent();
-            TodoItems = new ObservableCollection<TodoItem>();
+
+            _dataService = new JsonDataService();
+            TodoItems = new ObservableCollection<TodoItem>(_dataService.LoadTodos());
+
+            // Make sure all items have updated their status color
+            foreach (var item in TodoItems)
+            {
+                item.UpdateStatusColor();
+            }
             lstTasks.ItemsSource = TodoItems;
+
+            TodoItems.CollectionChanged += (s, e) => SaveTodos();
         }
 
         private void btnAdd_Click(object sender, RoutedEventArgs e)
@@ -68,6 +77,7 @@ namespace TodoAppWpf
                 ShowStatusMessage("Task updated successfully!", Brushes.Green);
             }
 
+            SaveTodos(); // Save after adding/modifying
             ClearForm();
         }
 
@@ -108,6 +118,7 @@ namespace TodoAppWpf
                 selectedItem.OnPropertyChanged(nameof(selectedItem.ModifiedDate));
 
                 ShowStatusMessage($"Task '{selectedItem.Title}' marked as done!", Brushes.Green);
+                SaveTodos(); // Save after marked as done
             }
         }
 
@@ -120,6 +131,7 @@ namespace TodoAppWpf
                 {
                     TodoItems.Remove(itemToRemove);
                     ShowStatusMessage("Task deleted successfully!", Brushes.Green);
+                    SaveTodos(); // Save after deletion
                     ClearForm();
                 }
             }
@@ -149,6 +161,18 @@ namespace TodoAppWpf
         private int GetNextId()
         {
             return TodoItems.Any() ? TodoItems.Max(item => item.Id) + 1 : 1;
+        }
+
+        private void SaveTodos()
+        {
+            _dataService.SaveTodos(TodoItems);
+        }
+
+        // Save when closed
+        protected override void OnClosed(EventArgs e)
+        {
+            SaveTodos();
+            base.OnClosed(e);
         }
     }
 }

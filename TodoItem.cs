@@ -1,5 +1,5 @@
-﻿using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
+using System.Text.Json.Serialization;
 using System.Windows.Media;
 
 namespace TodoAppWpf
@@ -33,6 +33,7 @@ namespace TodoAppWpf
             }
         }
 
+        [JsonIgnore]
         public Brush StatusColor
         {
             get => _statusColor;
@@ -40,6 +41,28 @@ namespace TodoAppWpf
             {
                 _statusColor = value;
                 OnPropertyChanged(nameof(StatusColor));
+            }
+        }
+
+        public string StatusColorString
+        {
+            get
+            {
+                if (StatusColor is SolidColorBrush solidColorBrush)
+                    return solidColorBrush.Color.ToString();
+                return StatusColor.ToString();
+            }
+            set
+            {
+                try
+                {
+                    var converter = new System.Windows.Media.BrushConverter();
+                    StatusColor = (Brush)converter.ConvertFromString(value)!;
+                }
+                catch
+                {
+                    StatusColor = Brushes.Gray;
+                }
             }
         }
 
