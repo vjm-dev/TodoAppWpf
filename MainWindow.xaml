@@ -5,6 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="Todo App" Height="700" Width="900" MinWidth="600" MinHeight="500">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </Window.Resources>
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -28,49 +31,108 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- Title Input -->
+                <!-- Title -->
                 <Label Grid.Row="0" Grid.Column="0" Content="Title*" 
-                       Margin="0,0,5,5" VerticalAlignment="Center"/>
+               Margin="0,0,5,5" VerticalAlignment="Center"/>
                 <TextBox x:Name="txtTitle" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"
-                         Margin="0,0,0,5" Padding="3" Text=""
-                         TextChanged="txtTitle_TextChanged"/>
+                 Margin="0,0,0,5" Padding="3" Text=""
+                 TextChanged="txtTitle_TextChanged"/>
                 <TextBlock x:Name="txtTitleError" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
-                           Foreground="Red" FontSize="10" TextWrapping="Wrap" Margin="0,0,0,5"
-                           Visibility="Collapsed"/>
+                   Foreground="Red" FontSize="10" TextWrapping="Wrap" Margin="0,0,0,5"
+                   Visibility="Collapsed"/>
 
-                <!-- Description Input -->
+                <!-- Description -->
                 <Label Grid.Row="2" Grid.Column="0" Content="Description*" 
-                       Margin="0,0,5,5" VerticalAlignment="Center"/>
+               Margin="0,0,5,5" VerticalAlignment="Center"/>
                 <TextBox x:Name="txtDescription" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2"
-                         Margin="0,0,0,5" Padding="3" Text="" 
-                         AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60"
-                         TextChanged="txtDescription_TextChanged"
-                         VerticalScrollBarVisibility="Auto"/>
+                 Margin="0,0,0,5" Padding="3" Text="" 
+                 AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60"
+                 TextChanged="txtDescription_TextChanged"
+                 VerticalScrollBarVisibility="Auto"/>
                 <TextBlock x:Name="txtDescriptionError" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2"
-                           Foreground="Red" FontSize="10" TextWrapping="Wrap" Margin="0,0,0,5"
-                           Visibility="Collapsed"/>
+                   Foreground="Red" FontSize="10" TextWrapping="Wrap" Margin="0,0,0,5"
+                   Visibility="Collapsed"/>
 
-                <!-- Status Input -->
+                <!-- Status -->
                 <Label Grid.Row="4" Grid.Column="0" Content="Status" 
-                       Margin="0,0,5,0" VerticalAlignment="Center"/>
+               Margin="0,0,5,0" VerticalAlignment="Center"/>
                 <ComboBox x:Name="cmbStatus" Grid.Row="4" Grid.Column="1" 
-                          SelectedIndex="0" Margin="0,0,5,0">
+                  SelectedIndex="0" Margin="0,0,5,0">
                     <ComboBoxItem Content="Pending"/>
                     <ComboBoxItem Content="Under review"/>
                     <ComboBoxItem Content="Done"/>
                 </ComboBox>
 
-                <Button x:Name="btnAdd" Grid.Row="4" Grid.Column="2" 
-                        Content="Add" Padding="20,5" Click="btnAdd_Click"/>
+                <!-- Reminder -->
+                <Label Grid.Row="5" Grid.Column="0" Content="Reminder" 
+                       Margin="0,5,5,0" VerticalAlignment="Center"/>
+                <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal" Margin="0,5,5,0">
+                    <DatePicker x:Name="dpReminderDate" Width="120"
+                                SelectedDateChanged="ReminderDate_Changed"/>
+                    <ComboBox x:Name="cmbReminderTime" Width="80" Margin="5,0,0,0"
+                              SelectedIndex="0">
+                        <ComboBoxItem Content="00:00"/>
+                        <ComboBoxItem Content="00:30"/>
+                        <ComboBoxItem Content="01:00"/>
+                        <ComboBoxItem Content="01:30"/>
+                        <ComboBoxItem Content="02:00"/>
+                        <ComboBoxItem Content="02:30"/>
+                        <ComboBoxItem Content="03:00"/>
+                        <ComboBoxItem Content="03:30"/>
+                        <ComboBoxItem Content="04:00"/>
+                        <ComboBoxItem Content="04:30"/>
+                        <ComboBoxItem Content="05:00"/>
+                        <ComboBoxItem Content="05:30"/>
+                        <ComboBoxItem Content="06:00"/>
+                        <ComboBoxItem Content="06:30"/>
+                        <ComboBoxItem Content="07:00"/>
+                        <ComboBoxItem Content="07:30"/>
+                        <ComboBoxItem Content="08:00"/>
+                        <ComboBoxItem Content="08:30"/>
+                        <ComboBoxItem Content="09:00"/>
+                        <ComboBoxItem Content="09:30"/>
+                        <ComboBoxItem Content="10:00"/>
+                        <ComboBoxItem Content="10:30"/>
+                        <ComboBoxItem Content="11:00"/>
+                        <ComboBoxItem Content="11:30"/>
+                        <ComboBoxItem Content="12:00"/>
+                        <ComboBoxItem Content="12:30"/>
+                        <ComboBoxItem Content="13:00"/>
+                        <ComboBoxItem Content="13:30"/>
+                        <ComboBoxItem Content="14:00"/>
+                        <ComboBoxItem Content="14:30"/>
+                        <ComboBoxItem Content="15:00"/>
+                        <ComboBoxItem Content="15:30"/>
+                        <ComboBoxItem Content="16:00"/>
+                        <ComboBoxItem Content="16:30"/>
+                        <ComboBoxItem Content="17:00"/>
+                        <ComboBoxItem Content="17:30"/>
+                        <ComboBoxItem Content="18:00"/>
+                        <ComboBoxItem Content="18:30"/>
+                        <ComboBoxItem Content="19:00"/>
+                        <ComboBoxItem Content="19:30"/>
+                        <ComboBoxItem Content="20:00"/>
+                        <ComboBoxItem Content="20:30"/>
+                        <ComboBoxItem Content="21:00"/>
+                        <ComboBoxItem Content="21:30"/>
+                        <ComboBoxItem Content="22:00"/>
+                        <ComboBoxItem Content="22:30"/>
+                        <ComboBoxItem Content="23:00"/>
+                        <ComboBoxItem Content="23:30"/>
+                    </ComboBox>
+                </StackPanel>
+                <Button x:Name="btnClearReminder" Grid.Row="5" Grid.Column="2" 
+                Content="Clear" Padding="10,5" Margin="0,5,0,0"
+                Click="btnClearReminder_Click"/>
 
-                <TextBlock Text="* These fields are mandatory." Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3"
-                           Margin="0,5,0,0" Foreground="DarkSlateGray" TextWrapping="Wrap"/>
-                
-                <!-- Status message -->
-                <TextBlock x:Name="txtStatusMessage" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3"
-                           Margin="0,30,0,0" Foreground="Green" TextWrapping="Wrap"/>
+                <Button x:Name="btnAdd" Grid.Row="6" Grid.Column="2" 
+                Content="Add" Padding="20,5" Click="btnAdd_Click" Margin="0,5,0,0"/>
+
+                <TextBlock Text="* These fields are mandatory." Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2"
+                   Margin="0,5,0,0" Foreground="DarkSlateGray" TextWrapping="Wrap" VerticalAlignment="Center"/>
             </Grid>
         </GroupBox>
 
@@ -116,19 +178,20 @@
             </Grid>
         </GroupBox>
 
-        <!-- Tasks list with improved layout -->
+        <!-- Tasks list -->
         <GroupBox Grid.Row="2" Header="Tasks" Margin="0,0,0,10">
             <Grid>
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
                     <ListBox x:Name="lstTasks" SelectionChanged="lstTasks_SelectionChanged"
-                             ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                     ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <Border Padding="10" Margin="0,5" BorderThickness="1" 
-                                        BorderBrush="#FFCCCCCC" CornerRadius="5">
+                                BorderBrush="#FFCCCCCC" CornerRadius="5">
                                     <Grid>
                                         <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
@@ -137,40 +200,48 @@
 
                                         <!-- Title -->
                                         <TextBlock Grid.Row="0" Text="{Binding Title}" 
-                                                   FontWeight="Bold" FontSize="14"
-                                                   TextTrimming="CharacterEllipsis"/>
+                                           FontWeight="Bold" FontSize="14"
+                                           TextTrimming="CharacterEllipsis"/>
 
                                         <!-- Description with scroll -->
                                         <ScrollViewer Grid.Row="1" MaxHeight="120" 
-                                                      VerticalScrollBarVisibility="Auto"
-                                                      HorizontalScrollBarVisibility="Auto"
-                                                      Margin="0,8,0,8">
+                                              VerticalScrollBarVisibility="Auto"
+                                              HorizontalScrollBarVisibility="Auto"
+                                              Margin="0,8,0,8">
                                             <TextBlock Text="{Binding Description}" 
-                                                       TextWrapping="Wrap" FontSize="12"/>
+                                               TextWrapping="Wrap" FontSize="12"/>
                                         </ScrollViewer>
 
+                                        <!-- Reminder info -->
+                                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,5"
+                                            Visibility="{Binding HasReminder, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                            <TextBlock Text="⏰ Reminder: " FontSize="10" Foreground="DarkOrange"/>
+                                            <TextBlock Text="{Binding ReminderDate, StringFormat=dd/MM/yyyy HH:mm}" 
+                                               FontSize="10" Foreground="DarkOrange"/>
+                                        </StackPanel>
+
                                         <!-- Dates -->
-                                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,8">
+                                        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,0,0,8">
                                             <TextBlock Text="Created: " FontSize="10" Foreground="Gray"/>
                                             <TextBlock Text="{Binding CreatedDate, StringFormat=dd/MM/yyyy HH:mm:ss}" 
-                                                       FontSize="10" Foreground="Gray" Margin="0,0,15,0"/>
+                                               FontSize="10" Foreground="Gray" Margin="0,0,15,0"/>
                                             <TextBlock Text="Modified: " FontSize="10" Foreground="Gray"/>
                                             <TextBlock Text="{Binding ModifiedDate, StringFormat=dd/MM/yyyy HH:mm:ss}" 
-                                                       FontSize="10" Foreground="Gray"/>
+                                               FontSize="10" Foreground="Gray"/>
                                         </StackPanel>
 
                                         <!-- Status and delete button -->
-                                        <StackPanel Grid.Row="3" Orientation="Horizontal" 
-                                                    HorizontalAlignment="Left">
+                                        <StackPanel Grid.Row="4" Orientation="Horizontal" 
+                                            HorizontalAlignment="Left">
                                             <Border Background="{Binding StatusColor}" CornerRadius="3" 
-                                                    Padding="8,4" VerticalAlignment="Center">
+                                            Padding="8,4" VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Status}" Margin="0,0,10,0" 
-                                                           Foreground="White" FontWeight="SemiBold"
-                                                           FontSize="11"/>
+                                                   Foreground="White" FontWeight="SemiBold"
+                                                   FontSize="11"/>
                                             </Border>
                                             <Button Content="Delete" Padding="12,4" 
-                                                    Click="btnDelete_Click" Tag="{Binding Id}"
-                                                    FontSize="11"/>
+                                            Click="btnDelete_Click" Tag="{Binding Id}"
+                                            FontSize="11"/>
                                         </StackPanel>
                                     </Grid>
                                 </Border>

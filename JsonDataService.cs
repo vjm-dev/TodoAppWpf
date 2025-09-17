@@ -30,10 +30,17 @@ namespace TodoAppWpf
                 var options = new JsonSerializerOptions
                 {
                     Converters = { new JsonBrushConverter() },
-                    WriteIndented = true
+                    WriteIndented = true,
+                    PropertyNameCaseInsensitive = true
                 };
 
-                return JsonSerializer.Deserialize<List<TodoItem>>(json, options) ?? new List<TodoItem>();
+                var items = JsonSerializer.Deserialize<List<TodoItem>>(json, options) ?? new List<TodoItem>();
+                foreach (var item in items)
+                {
+                    item.UpdateStatusColor();
+                }
+
+                return items;
             }
             catch (Exception ex)
             {

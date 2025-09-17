@@ -8,8 +8,7 @@ namespace TodoAppWpf
     {
         private string _status = string.Empty;
         private Brush _statusColor = Brushes.Gray;
-        private bool _isDescriptionExpanded = false;
-        private bool _showToggleButton = false;
+        private DateTime? _reminderDate;
 
         public TodoItem()
         {
@@ -22,6 +21,20 @@ namespace TodoAppWpf
         public string Description { get; set; } = string.Empty;
         public DateTime CreatedDate { get; set; }
         public DateTime ModifiedDate { get; set; }
+
+        public DateTime? ReminderDate
+        {
+            get => _reminderDate;
+            set
+            {
+                _reminderDate = value;
+                OnPropertyChanged(nameof(ReminderDate));
+                OnPropertyChanged(nameof(HasReminder));
+            }
+        }
+
+        [JsonIgnore]
+        public bool HasReminder => ReminderDate.HasValue && ReminderDate > DateTime.Now;
 
         public string Status
         {
@@ -68,31 +81,28 @@ namespace TodoAppWpf
             }
         }
 
-        [JsonIgnore]
-        public bool IsDescriptionExpanded
+        public string ReminderDateString
         {
-            get => _isDescriptionExpanded;
+            get => ReminderDate?.ToString("o") ?? string.Empty;
             set
             {
-                _isDescriptionExpanded = value;
-                OnPropertyChanged(nameof(IsDescriptionExpanded));
-                OnPropertyChanged(nameof(ToggleDescriptionText));
+                if (string.IsNullOrEmpty(value))
+                {
+                    ReminderDate = null;
+                }
+                else
+                {
+                    if (DateTime.TryParse(value, out DateTime date))
+                    {
+                        ReminderDate = date;
+                    }
+                    else
+                    {
+                        ReminderDate = null;
+                    }
+                }
             }
         }
-
-        [JsonIgnore]
-        public bool ShowToggleButton
-        {
-            get => _showToggleButton;
-            set
-            {
-                _showToggleButton = value;
-                OnPropertyChanged(nameof(ShowToggleButton));
-            }
-        }
-
-        [JsonIgnore]
-        public string ToggleDescriptionText => IsDescriptionExpanded ? "Show less" : "Show more";
 
         public void UpdateStatusColor()
         {
@@ -109,13 +119,6 @@ namespace TodoAppWpf
         {
             ModifiedDate = DateTime.Now;
             OnPropertyChanged(nameof(ModifiedDate));
-        }
-
-        public void CheckDescriptionLength()
-        {
-            // Show toggle button only if description has more than 3 lines
-            var lineCount = Description.Split('\n').Length;
-            ShowToggleButton = lineCount > 3;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

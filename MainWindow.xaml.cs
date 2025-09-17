@@ -2,7 +2,8 @@
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
+using System.Windows.Threading;
+using TodoAppWpf.Views;
 
 namespace TodoAppWpf
 {
@@ -14,14 +15,18 @@ namespace TodoAppWpf
         private readonly JsonDataService _dataService;
         private string currentFilter = "All";
         private string currentSort = "Creation Date (Newest)";
+        private DispatcherTimer? reminderTimer;
+        private DispatcherTimer? statusMessageTimer;
 
         // Validation constants
-        private const int MaxTitleLength = 100;
-        private const int MaxDescriptionLength = 750;
+        private const int MAX_TITLE_LENGTH = 100;
+        private const int MAX_DESCRIPTION_LENGTH = 750;
 
         public MainWindow()
         {
             InitializeComponent();
+
+            statusMessageTimer = new DispatcherTimer();
 
             _dataService = new JsonDataService();
 
@@ -47,156 +52,218 @@ namespace TodoAppWpf
                 SaveTodos();
             };
 
+            // Initialize and start reminder timer
+            InitializeReminderTimer();
+
             // Initial validation check
             ValidateForm();
+
+            // Check for any pending reminders on startup
+            NotificationService.CheckReminders(TodoItems);
+        }
+
+        private void InitializeReminderTimer()
+        {
+            reminderTimer = new DispatcherTimer();
+            reminderTimer.Interval = TimeSpan.FromMinutes(1); // Check every minute
+            reminderTimer.Tick += ReminderTimer_Tick!;
+            reminderTimer.Start();
+        }
+
+        private void ReminderTimer_Tick(object sender, EventArgs e)
+        {
+            NotificationService.CheckReminders(TodoItems);
         }
 
         private void btnAdd_Click(object sender, RoutedEventArgs e)
         {
-            var title = txtTitle.Text.Trim();
-            if (string.IsNullOrWhiteSpace(title))
+            try
             {
-                ShowErrorMessage(txtTitleError, "Title is required.");
-                return;
-            }
-
-            var desc = txtDescription.Text.Trim();
-            if (string.IsNullOrWhiteSpace(desc))
-            {
-                ShowErrorMessage(txtDescriptionError, "Description is required.");
-                return;
-            }
-
-            if (desc.Length < 10)
-            {
-                ShowErrorMessage(txtDescriptionError, "Cannot be less than 10 characters.");
-                return;
-            }
-
-            if (!ValidateForm())
-            {
-                ShowStatusMessage("Please fix validation errors before adding a task.", Brushes.Red);
-                return;
-            }
-
-            var status = ((ComboBoxItem)cmbStatus.SelectedItem).Content.ToString();
-
-            if (editId == -1)
-            {
-                // Check for duplicate titles (case-insensitive)
-                if (TodoItems.Any(item =>
-                    item.Title.Equals(txtTitle.Text.Trim(), StringComparison.OrdinalIgnoreCase)))
+                var title = txtTitle.Text.Trim();
+                if (string.IsNullOrWhiteSpace(title))
                 {
-                    ShowStatusMessage("A task with this title already exists!", Brushes.Red);
+                    ShowErrorMessage(txtTitleError, "Title is required.");
                     return;
                 }
 
-                // Add new item
-                var newItem = new TodoItem
+                var desc = txtDescription.Text.Trim();
+                if (string.IsNullOrWhiteSpace(desc))
                 {
-                    Id = GetNextId(),
-                    Title = txtTitle.Text.Trim(),
-                    Description = txtDescription.Text.Trim(),
-                    Status = status!
-                };
-                newItem.UpdateStatusColor();
+                    ShowErrorMessage(txtDescriptionError, "Description is required.");
+                    return;
+                }
 
-                TodoItems.Add(newItem);
-                ShowStatusMessage("Task added successfully!", Brushes.Green);
-            }
-            else
-            {
-                // Update existing item
-                var existingItem = TodoItems.FirstOrDefault(item => item.Id == editId);
-                if (existingItem != null)
+                if (desc.Length < 10)
                 {
-                    // Check for duplicate titles excluding the current item
+                    ShowErrorMessage(txtDescriptionError, "Cannot be less than 10 characters.");
+                    return;
+                }
+
+                if (!ValidateForm())
+                {
+                    NotificationService.ShowTaskNotification("ERROR", "Please fix validation errors before adding a task.", ToastType.ERROR);
+                    return;
+                }
+
+                var reminderDate = dpReminderDate.SelectedDate;
+                if (reminderDate.HasValue && cmbReminderTime.SelectedItem is ComboBoxItem timeItem)
+                {
+                    var timeStr = timeItem.Content.ToString();
+                    if (TimeSpan.TryParse(timeStr, out var time))
+                    {
+                        reminderDate = reminderDate.Value.Add(time);
+                    }
+                }
+
+                var status = ((ComboBoxItem)cmbStatus.SelectedItem).Content.ToString();
+
+                if (editId == -1)
+                {
+                    // Check for duplicate titles (case-insensitive)
                     if (TodoItems.Any(item =>
-                        item.Id != editId &&
                         item.Title.Equals(txtTitle.Text.Trim(), StringComparison.OrdinalIgnoreCase)))
                     {
-                        ShowStatusMessage("A task with this title already exists!", Brushes.Red);
+                        NotificationService.ShowTaskNotification("ERROR", "A task with this title already exists!", ToastType.ERROR);
                         return;
                     }
 
-                    existingItem.Title = txtTitle.Text.Trim();
-                    existingItem.Description = txtDescription.Text.Trim();
-                    existingItem.Status = status!;
-                    existingItem.UpdateStatusColor();
-                    existingItem.UpdateModifiedDate();
+                    // Add new item
+                    var newItem = new TodoItem
+                    {
+                        Id = GetNextId(),
+                        Title = txtTitle.Text.Trim(),
+                        Description = txtDescription.Text.Trim(),
+                        Status = status!,
+                        ReminderDate = reminderDate
+                    };
+                    newItem.UpdateStatusColor();
 
-                    // Notify UI that the item has changed
-                    existingItem.OnPropertyChanged(nameof(existingItem.Title));
-                    existingItem.OnPropertyChanged(nameof(existingItem.Description));
-                    existingItem.OnPropertyChanged(nameof(existingItem.Status));
-                    existingItem.OnPropertyChanged(nameof(existingItem.StatusColor));
+                    TodoItems.Add(newItem);
+
+                    // Show notification
+                    NotificationService.ShowTaskNotification("TASK ADDED", $"Task '{newItem.Title}' has been added successfully!", ToastType.SUCCESS);
+                }
+                else
+                {
+                    // Update existing item
+                    var existingItem = TodoItems.FirstOrDefault(item => item.Id == editId);
+                    if (existingItem != null)
+                    {
+                        // Check for duplicate titles excluding the current item
+                        if (TodoItems.Any(item =>
+                            item.Id != editId &&
+                            item.Title.Equals(txtTitle.Text.Trim(), StringComparison.OrdinalIgnoreCase)))
+                        {
+                            NotificationService.ShowTaskNotification("ERROR", "A task with this title already exists!", ToastType.ERROR);
+                            return;
+                        }
+
+                        existingItem.Title = txtTitle.Text.Trim();
+                        existingItem.Description = txtDescription.Text.Trim();
+                        existingItem.Status = status!;
+                        existingItem.ReminderDate = reminderDate;
+                        existingItem.UpdateStatusColor();
+                        existingItem.UpdateModifiedDate();
+
+                        // Notify UI that the item has changed
+                        existingItem.OnPropertyChanged(nameof(existingItem.Title));
+                        existingItem.OnPropertyChanged(nameof(existingItem.Description));
+                        existingItem.OnPropertyChanged(nameof(existingItem.Status));
+                        existingItem.OnPropertyChanged(nameof(existingItem.StatusColor));
+                    }
+
+                    editId = -1;
+                    btnAdd.Content = "Add";
+                    NotificationService.ShowTaskNotification("TASK UPDATED", "Task updated successfully!", ToastType.SUCCESS);
                 }
 
-                editId = -1;
-                btnAdd.Content = "Add";
-                ShowStatusMessage("Task updated successfully!", Brushes.Green);
+                SaveTodos();
+                ClearForm();
             }
-
-            SaveTodos();
-            ClearForm();
+            catch (Exception ex)
+            {
+                NotificationService.ShowTaskNotification("ERROR", $"Error: {ex.Message}", ToastType.ERROR);
+            }
         }
 
         private void btnUpdate_Click(object sender, RoutedEventArgs e)
         {
-            if (lstTasks.SelectedItem is TodoItem selectedItem)
+            try
             {
-                txtTitle.Text = selectedItem.Title;
-                txtDescription.Text = selectedItem.Description;
-
-                // Set the status in the combobox
-                for (int i = 0; i < cmbStatus.Items.Count; i++)
+                if (lstTasks.SelectedItem is TodoItem selectedItem)
                 {
-                    var item = (ComboBoxItem)cmbStatus.Items[i];
-                    if (item.Content.ToString() == selectedItem.Status)
+                    txtTitle.Text = selectedItem.Title;
+                    txtDescription.Text = selectedItem.Description;
+                    dpReminderDate.SelectedDate = selectedItem.ReminderDate;
+
+                    // Set the status in the combobox
+                    for (int i = 0; i < cmbStatus.Items.Count; i++)
                     {
-                        cmbStatus.SelectedIndex = i;
-                        break;
+                        var item = (ComboBoxItem)cmbStatus.Items[i];
+                        if (item.Content.ToString() == selectedItem.Status)
+                        {
+                            cmbStatus.SelectedIndex = i;
+                            break;
+                        }
                     }
+
+                    editId = selectedItem.Id;
+                    btnAdd.Content = "Save";
+
+                    // Validate the form when editing
+                    ValidateForm();
                 }
-
-                editId = selectedItem.Id;
-                btnAdd.Content = "Save";
-                txtStatusMessage.Text = $"Editing task: {selectedItem.Title}";
-
-                // Validate the form when editing
-                ValidateForm();
+            }
+            catch (Exception ex)
+            {
+                NotificationService.ShowTaskNotification("ERROR", $"Error: {ex.Message}", ToastType.ERROR);
             }
         }
 
         private void btnMarkComplete_Click(object sender, RoutedEventArgs e)
         {
-            if (lstTasks.SelectedItem is TodoItem selectedItem)
+            try
             {
-                selectedItem.Status = "Done";
-                selectedItem.UpdateStatusColor();
+                if (lstTasks.SelectedItem is TodoItem selectedItem)
+                {
+                    selectedItem.Status = "Done";
+                    selectedItem.UpdateStatusColor();
 
-                // Notify UI that the item has changed
-                selectedItem.OnPropertyChanged(nameof(selectedItem.Status));
-                selectedItem.OnPropertyChanged(nameof(selectedItem.StatusColor));
-                selectedItem.OnPropertyChanged(nameof(selectedItem.ModifiedDate));
+                    // Notify UI that the item has changed
+                    selectedItem.OnPropertyChanged(nameof(selectedItem.Status));
+                    selectedItem.OnPropertyChanged(nameof(selectedItem.StatusColor));
+                    selectedItem.OnPropertyChanged(nameof(selectedItem.ModifiedDate));
 
-                ShowStatusMessage($"Task '{selectedItem.Title}' marked as done!", Brushes.Green);
-                SaveTodos(); // Save after marked as done
+                    // Show notification
+                    NotificationService.ShowTaskNotification("TASK COMPLETED", $"Task '{selectedItem.Title}' has been marked as done!", ToastType.SUCCESS);
+                    SaveTodos(); // Save after marked as done
+                }
+            }
+            catch (Exception ex)
+            {
+                NotificationService.ShowTaskNotification("ERROR", $"Error: {ex.Message}", ToastType.ERROR);
             }
         }
 
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
-            if (((Button)sender).Tag is int id)
+            try
             {
-                var itemToRemove = TodoItems.FirstOrDefault(item => item.Id == id);
-                if (itemToRemove != null)
+                if (((Button)sender).Tag is int id)
                 {
-                    TodoItems.Remove(itemToRemove);
-                    ShowStatusMessage("Task deleted successfully!", Brushes.Green);
-                    SaveTodos(); // Save after deletion
-                    ClearForm();
+                    var itemToRemove = TodoItems.FirstOrDefault(item => item.Id == id);
+                    if (itemToRemove != null)
+                    {
+                        TodoItems.Remove(itemToRemove);
+                        NotificationService.ShowTaskNotification("TASK DELETED", $"Task '{itemToRemove.Title}' has been deleted!", ToastType.SUCCESS);
+                        SaveTodos(); // Save after deletion
+                        ClearForm();
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                NotificationService.ShowTaskNotification("ERROR", $"Error: {ex.Message}", ToastType.ERROR);
             }
         }
 
@@ -244,12 +311,22 @@ namespace TodoAppWpf
             ValidateForm();
         }
 
+        private void btnClearReminder_Click(object sender, RoutedEventArgs e)
+        {
+            dpReminderDate.SelectedDate = null;
+        }
+
+        private void ReminderDate_Changed(object sender, SelectionChangedEventArgs e)
+        {
+            // Optional: Add any validation or feedback for reminder date changes
+        }
+
         private void ApplyFilterAndSort()
         {
             if (TodoItems == null) return;
 
             // Apply filter
-            IEnumerable<TodoItem> filtered = currentFilter == "All"
+            var filtered = currentFilter == "All"
                 ? TodoItems
                 : TodoItems.Where(item => item.Status == currentFilter);
 
@@ -294,9 +371,9 @@ namespace TodoAppWpf
         {
             var title = txtTitle.Text.Trim();
 
-            if (title.Length > MaxTitleLength)
+            if (title.Length > MAX_TITLE_LENGTH)
             {
-                ShowErrorMessage(txtTitleError, $"Title cannot exceed {MaxTitleLength} characters.");
+                ShowErrorMessage(txtTitleError, $"Title cannot exceed {MAX_TITLE_LENGTH} characters.");
                 return false;
             }
 
@@ -315,9 +392,9 @@ namespace TodoAppWpf
         {
             var description = txtDescription.Text;
 
-            if (description.Length > MaxDescriptionLength)
+            if (description.Length > MAX_DESCRIPTION_LENGTH)
             {
-                ShowErrorMessage(txtDescriptionError, $"Description cannot exceed {MaxDescriptionLength} characters.");
+                ShowErrorMessage(txtDescriptionError, $"Description cannot exceed {MAX_DESCRIPTION_LENGTH} characters.");
                 return false;
             }
 
@@ -355,23 +432,19 @@ namespace TodoAppWpf
             errorControl.Visibility = Visibility.Collapsed;
         }
 
-        private void ShowStatusMessage(string message, Brush color)
-        {
-            txtStatusMessage.Foreground = color;
-            txtStatusMessage.Text = message;
-        }
-
         private void ClearForm()
         {
             txtTitle.Clear();
             txtDescription.Clear();
             cmbStatus.SelectedIndex = 0;
+            dpReminderDate.SelectedDate = null;
             lstTasks.SelectedIndex = -1;
             ClearErrorMessage(txtTitleError);
             ClearErrorMessage(txtDescriptionError);
             btnAdd.Content = "Add";
             editId = -1;
             ValidateForm();
+            statusMessageTimer?.Stop();
         }
 
         private int GetNextId()
@@ -387,6 +460,8 @@ namespace TodoAppWpf
         // Save when closed
         protected override void OnClosed(EventArgs e)
         {
+            // Stop the timer when the window closes
+            reminderTimer?.Stop();
             SaveTodos();
             base.OnClosed(e);
         }
