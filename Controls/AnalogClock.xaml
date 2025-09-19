@@ -1,0 +1,15 @@
+﻿<UserControl x:Class="TodoAppWpf.Controls.AnalogClock"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Width="240" Height="240">
+    <Canvas x:Name="ClockCanvas" Width="240" Height="240">
+        <!-- Center point -->
+        <Ellipse Canvas.Left="115" Canvas.Top="115" Width="10" Height="10" Fill="Black"/>
+
+        <!-- Hour hand -->
+        <Line x:Name="HourHand" X1="120" Y1="120" X2="120" Y2="80" Stroke="Orange" StrokeThickness="3"/>
+
+        <!-- Minute hand -->
+        <Line x:Name="MinuteHand" X1="120" Y1="120" X2="120" Y2="60" Stroke="Orange" StrokeThickness="2"/>
+    </Canvas>
+</UserControl>

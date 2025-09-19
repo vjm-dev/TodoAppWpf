@@ -1,8 +1,10 @@
 ﻿using System.Collections.ObjectModel;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
+using TodoAppWpf.Controls;
 using TodoAppWpf.Views;
 
 namespace TodoAppWpf
@@ -16,7 +18,7 @@ namespace TodoAppWpf
         private string currentFilter = "All";
         private string currentSort = "Creation Date (Newest)";
         private DispatcherTimer? reminderTimer;
-        private DispatcherTimer? statusMessageTimer;
+        private DispatcherTimer statusMessageTimer;
 
         // Validation constants
         private const int MAX_TITLE_LENGTH = 100;
@@ -105,15 +107,8 @@ namespace TodoAppWpf
                     return;
                 }
 
-                var reminderDate = dpReminderDate.SelectedDate;
-                if (reminderDate.HasValue && cmbReminderTime.SelectedItem is ComboBoxItem timeItem)
-                {
-                    var timeStr = timeItem.Content.ToString();
-                    if (TimeSpan.TryParse(timeStr, out var time))
-                    {
-                        reminderDate = reminderDate.Value.Add(time);
-                    }
-                }
+                // Get the reminder date from the new DateTimePicker control
+                var reminderDate = dateTimePicker.SelectedDateTime;
 
                 var status = ((ComboBoxItem)cmbStatus.SelectedItem).Content.ToString();
 
@@ -142,6 +137,9 @@ namespace TodoAppWpf
 
                     // Show notification
                     NotificationService.ShowTaskNotification("TASK ADDED", $"Task '{newItem.Title}' has been added successfully!", ToastType.SUCCESS);
+
+                    // Schedule reminder if set
+                    NotificationService.ScheduleReminder(newItem);
                 }
                 else
                 {
@@ -170,6 +168,9 @@ namespace TodoAppWpf
                         existingItem.OnPropertyChanged(nameof(existingItem.Description));
                         existingItem.OnPropertyChanged(nameof(existingItem.Status));
                         existingItem.OnPropertyChanged(nameof(existingItem.StatusColor));
+
+                        // Schedule reminder if set
+                        NotificationService.ScheduleReminder(existingItem);
                     }
 
                     editId = -1;
@@ -194,7 +195,7 @@ namespace TodoAppWpf
                 {
                     txtTitle.Text = selectedItem.Title;
                     txtDescription.Text = selectedItem.Description;
-                    dpReminderDate.SelectedDate = selectedItem.ReminderDate;
+                    dateTimePicker.SelectedDateTime = selectedItem.ReminderDate;
 
                     // Set the status in the combobox
                     for (int i = 0; i < cmbStatus.Items.Count; i++)
@@ -313,12 +314,7 @@ namespace TodoAppWpf
 
         private void btnClearReminder_Click(object sender, RoutedEventArgs e)
         {
-            dpReminderDate.SelectedDate = null;
-        }
-
-        private void ReminderDate_Changed(object sender, SelectionChangedEventArgs e)
-        {
-            // Optional: Add any validation or feedback for reminder date changes
+            dateTimePicker.SelectedDateTime = null;
         }
 
         private void ApplyFilterAndSort()
@@ -437,7 +433,7 @@ namespace TodoAppWpf
             txtTitle.Clear();
             txtDescription.Clear();
             cmbStatus.SelectedIndex = 0;
-            dpReminderDate.SelectedDate = null;
+            dateTimePicker.SelectedDateTime = null;
             lstTasks.SelectedIndex = -1;
             ClearErrorMessage(txtTitleError);
             ClearErrorMessage(txtDescriptionError);
