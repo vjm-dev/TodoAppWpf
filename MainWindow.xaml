@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="clr-namespace:TodoAppWpf.Controls"
         mc:Ignorable="d"
-        Title="Todo App" Height="700" Width="900" MinWidth="600" MinHeight="450">
+        Title="Todo App" Height="700" Width="980" MinWidth="600" MinHeight="450">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </Window.Resources>
