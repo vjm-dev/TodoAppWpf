@@ -57,9 +57,9 @@
                         <Label Grid.Row="2" Grid.Column="0" Content="Description*" Margin="0,0,5,5" VerticalAlignment="Center"/>
                         <TextBox x:Name="txtDescription" Grid.Row="2" Grid.Column="1" 
                                  Margin="0,0,0,5" Padding="3" Text="" 
-                                 AcceptsReturn="True" TextWrapping="Wrap" MinHeight="80"
+                                 AcceptsReturn="True" TextWrapping="Wrap" MinHeight="80" MaxHeight="100"
                                  TextChanged="txtDescription_TextChanged"
-                                 VerticalScrollBarVisibility="Auto"/>
+                                 VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"/>
                         <TextBlock x:Name="txtDescriptionError" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
                                    Foreground="Red" FontSize="10" TextWrapping="Wrap" Margin="0,0,0,5"
                                    Visibility="Collapsed"/>
