@@ -45,28 +45,28 @@
                         </Grid.RowDefinitions>
 
                         <!-- Title -->
-                        <Label Grid.Row="0" Grid.Column="0" Content="Title*" Margin="0,0,5,5" VerticalAlignment="Center"/>
-                        <TextBox x:Name="txtTitle" Grid.Row="0" Grid.Column="1" 
-                                 Margin="0,0,0,5" Padding="3" Text=""
-                                 TextChanged="txtTitle_TextChanged"/>
+                        <Label Grid.Row="0" Grid.Column="0" Content="Title*" Margin="0,0,72,0" VerticalAlignment="Top"/>
+                        <TextBox x:Name="txtTitle" Grid.Row="0" 
+                                 Margin="87,0,0,5" Padding="3" Text=""
+                                 TextChanged="txtTitle_TextChanged" Grid.ColumnSpan="2"/>
                         <TextBlock x:Name="txtTitleError" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
                                    Foreground="Red" FontSize="10" TextWrapping="Wrap" Margin="0,0,0,5"
                                    Visibility="Collapsed"/>
 
                         <!-- Description -->
-                        <Label Grid.Row="2" Grid.Column="0" Content="Description*" Margin="0,0,5,5" VerticalAlignment="Center"/>
-                        <TextBox x:Name="txtDescription" Grid.Row="2" Grid.Column="1" 
-                                 Margin="0,0,0,5" Padding="3" Text="" 
+                        <Label Grid.Row="2" Grid.Column="0" Content="Description*" Margin="0,27,72,0" VerticalAlignment="Top"/>
+                        <TextBox x:Name="txtDescription" Grid.Row="2" 
+                                 Margin="87,0,0,5" Padding="3" Text="" 
                                  AcceptsReturn="True" TextWrapping="Wrap" MinHeight="80" MaxHeight="100"
                                  TextChanged="txtDescription_TextChanged"
-                                 VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"/>
+                                 VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Grid.ColumnSpan="2"/>
                         <TextBlock x:Name="txtDescriptionError" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
                                    Foreground="Red" FontSize="10" TextWrapping="Wrap" Margin="0,0,0,5"
                                    Visibility="Collapsed"/>
 
                         <!-- Status -->
-                        <Label Grid.Row="4" Grid.Column="0" Content="Status" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                        <ComboBox x:Name="cmbStatus" Grid.Row="4" Grid.Column="1" SelectedIndex="0" Margin="0,0,0,0">
+                        <Label Grid.Row="4" Grid.Column="0" Content="Status" Margin="0,0,72,0" VerticalAlignment="Center"/>
+                        <ComboBox x:Name="cmbStatus" Grid.Row="4" SelectedIndex="0" Margin="87,0,0,33" Grid.ColumnSpan="2" Grid.RowSpan="2">
                             <ComboBoxItem Content="Pending"/>
                             <ComboBoxItem Content="Under review"/>
                             <ComboBoxItem Content="Done"/>
