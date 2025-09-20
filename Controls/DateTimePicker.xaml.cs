@@ -23,6 +23,8 @@ namespace TodoAppWpf.Controls
             set => SetValue(SelectedTimeProperty, value);
         }
 
+        public AnalogClock AnalogClock => analogClock;
+
         private bool _isLoaded = false;
         private bool _updatingFromUI = false;
 
@@ -131,7 +133,8 @@ namespace TodoAppWpf.Controls
 
         private void BtnClearTime_Click(object sender, RoutedEventArgs e)
         {
-            SelectedTime = null;
+            SelectedTime = TimeSpan.Zero; // move analog clock hands to 00:00
+            SelectedTime = null; // set to --:--
             if (datePicker.SelectedDate.HasValue)
             {
                 SelectedDateTime = datePicker.SelectedDate.Value;

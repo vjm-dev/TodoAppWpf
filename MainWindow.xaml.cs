@@ -1,5 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -315,6 +314,13 @@ namespace TodoAppWpf
         private void btnClearReminder_Click(object sender, RoutedEventArgs e)
         {
             dateTimePicker.SelectedDateTime = null;
+            dateTimePicker.SelectedTime = null;
+            // Set analog clock to 00:00
+            if (dateTimePicker.AnalogClock != null)
+            {
+                dateTimePicker.AnalogClock.SelectedTime = TimeSpan.Zero; // move analog clock hands to 00:00
+                dateTimePicker.AnalogClock.SelectedTime = null; // set to --:--
+            }
         }
 
         private void ApplyFilterAndSort()
